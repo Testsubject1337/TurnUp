@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public class DefaultAnchor : AnchorPoint
+public class DefaultAnchor : Anchor
 {
     private void Awake()
     {
-        anchorPointType = AnchorPointType.Default;
+        anchorType = AnchorPointType.Default;
     }
 }

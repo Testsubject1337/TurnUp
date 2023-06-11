@@ -362,12 +362,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   baseSpeed: 2
-  maxSpeed: 10
-  acceleration: 0.1
+  maxSpeed: 15
+  acceleration: 0.07
   smoothTimeIncrease: 0.5
   smoothTimeDecrease: 1
   heightFactor: 0.001
-  maxSpeedIncrease: 6
+  maxSpeedIncrease: 7
   gameManager: {fileID: 1982821501}
   playerPosition: {fileID: 25553933}
   speedup: 0
@@ -796,6 +796,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gameCamera: {fileID: 519420031}
   GodModeEnabled: 1
+  interpolationPosition: 5000
   scoreText: {fileID: 1747127746}
   highscoreText: {fileID: 252756689}
 --- !u!4 &1982821502
@@ -843,18 +844,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4777d166a5399034fb17477cfe3aa5e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultAnchorPrefab: {fileID: 7555584423985453901, guid: 1e9f03a7f05aa2d408289d3fd523e6ce, type: 3}
-  movingAnchorPrefab: {fileID: 0}
+  defaultAnchorPrefab: {fileID: 8993170208585211968, guid: 1e9f03a7f05aa2d408289d3fd523e6ce, type: 3}
+  movingAnchorPrefab: {fileID: 586295064144102356, guid: 257c97c4daab8254ca9bce470e349d11, type: 3}
   mainCamera: {fileID: 519420031}
-  spawnHeightOffset: 1.5
-  despawnHeightOffset: 10
-  minSpawnDistance: 8
-  maxSpawnDistance: 10
-  interpolationStartHeight: 0
-  interpolationEndHeight: 3000
-  specialAnchorStartHeight: 500
-  defaultAnchorPoolSize: 8
-  movingAnchorPoolSize: 8
+  gameManager: {fileID: 1982821501}
+  spawnDistanceMin: 5
+  spawnDistanceMax: 15
+  spawnDistanceVariance: 2
+  spawnProbabilityIncreaseScore: 500
+  movingAnchorInitialSpawnProbability: 0.1
+  movingAnchorMaxSpawnProbability: 0.4
   debugEnabled: 1
 --- !u!4 &2037028748
 Transform:
@@ -1125,7 +1124,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4632397794813884834, guid: d3dbb86603922ce4a8972cca261d1f80, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 58.19995
+      value: 58.200195
       objectReference: {fileID: 0}
     - target: {fileID: 5426228574454154745, guid: d3dbb86603922ce4a8972cca261d1f80, type: 3}
       propertyPath: m_AnchorMax.x

@@ -4,18 +4,22 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
-    public Camera gameCamera;
-    public bool GodModeEnabled = false;
+ 
+    [SerializeField] private Camera gameCamera;
+    [SerializeField] private bool GodModeEnabled = false;
+    [SerializeField] private float interpolationPosition = 5000;
 
-    public TextMeshProUGUI scoreText;
-    public TextMeshProUGUI highscoreText;
+    [SerializeField] private TextMeshProUGUI scoreText;
+    [SerializeField] private TextMeshProUGUI highscoreText;
 
     private int currentScore;
     private int highscore;
 
     public bool IsGameRunning { get; private set; }
     public bool IsPaused { get; private set; }
+    public static GameManager Instance { get; private set; }
+
+
 
     private void Awake()
     {
@@ -115,8 +119,13 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public int getScore()
+    public int GetScore()
     {
         return currentScore;
+    }
+
+    public float GetInterpolationPosition()
+    {
+        return interpolationPosition;
     }
 }

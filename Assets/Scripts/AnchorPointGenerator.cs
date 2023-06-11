@@ -3,215 +3,160 @@ using UnityEngine;
 
 public class AnchorPointGenerator : MonoBehaviour
 {
-    [SerializeField] private GameObject defaultAnchorPrefab;
-    [SerializeField] private GameObject movingAnchorPrefab;
+    // Required Game Objects
+    [SerializeField] private Anchor defaultAnchorPrefab;
+    [SerializeField] private Anchor movingAnchorPrefab;
     [SerializeField] private Camera mainCamera;
-    [SerializeField] private float spawnHeightOffset = 1.5f;
-    [SerializeField] private float despawnHeightOffset = 10f;
-    [SerializeField] private float minSpawnDistance = 8f; // Umbenannt von startSpawnDistance
-    [SerializeField] private float maxSpawnDistance = 15f; // Umbenannt von endSpawnDistance
-    [SerializeField] private float interpolationStartHeight = 0f; // Umbenannt von startHeight
-    [SerializeField] private float interpolationEndHeight = 3000f; // Umbenannt von endHeight
-    [SerializeField] private float specialAnchorStartHeight = 500f; // Start-Höhe für den speziellen Anker
-    [SerializeField] private int defaultAnchorPoolSize = 8;
-    [SerializeField] private int movingAnchorPoolSize = 8;
+    [SerializeField] private GameManager gameManager;
+
+
+    // Gameplay Settings
+    [SerializeField] private float spawnDistanceMin = 5f;
+    [SerializeField] private float spawnDistanceMax = 15f;
+    [SerializeField] private float spawnDistanceVariance = 2f;
+    [SerializeField] private int spawnProbabilityIncreaseScore = 500;
+    [SerializeField] private float movingAnchorInitialSpawnProbability = 0.1f;
+    [SerializeField] private float movingAnchorMaxSpawnProbability = 0.4f;
+
+    // Technical Settings
+    private const float despawnTolerance = -4f;
+    private const float spawnTolerance = 4f;
+
+    // Debug Settings
     [SerializeField] private bool debugEnabled = false;
 
-    private const float DespawnThreshold = -4f; // Threshold for despawning anchors
-
-    private Queue<GameObject> defaultAnchorPointPool;
-    private Queue<GameObject> movingAnchorPointPool;
-    private List<GameObject> activeDefaultAnchorPoints;
-    private List<GameObject> activeMovingAnchorPoints;
-    private float lastSpawnHeight = 0f;
-    private float specialAnchorSpawnProbability = 0.2f; // Wahrscheinlichkeit für den speziellen Anker
-
+    // Other
+    private ObjectPool<Anchor> defaultAnchorPointPool;
+    private ObjectPool<Anchor> movingAnchorPointPool;
+    private List<Anchor> activeAnchorPoints;
+    private float lastSpawnHeight;
+    private float currentSpawnDistance;
+    private float currentSpawnProbability;
+    private float screenTop;
     private void Start()
     {
-        lastSpawnHeight = mainCamera.transform.position.y + mainCamera.orthographicSize + spawnHeightOffset;
+        UpdateScreenTop();
+        lastSpawnHeight = screenTop;
 
         // Initialize object pools
-        defaultAnchorPointPool = new Queue<GameObject>();
-        movingAnchorPointPool = new Queue<GameObject>();
-        activeDefaultAnchorPoints = new List<GameObject>();
-        activeMovingAnchorPoints = new List<GameObject>();
+        defaultAnchorPointPool = new ObjectPool<Anchor>(defaultAnchorPrefab, 16);
+        movingAnchorPointPool = new ObjectPool<Anchor>(movingAnchorPrefab, 16);
 
-        for (int i = 0; i < defaultAnchorPoolSize; i++)
-        {
-            GameObject defaultAnchorPoint = Instantiate(defaultAnchorPrefab);
-            defaultAnchorPoint.SetActive(false);
-            defaultAnchorPoint.GetComponent<AnchorPoint>().ResetState();
-            defaultAnchorPointPool.Enqueue(defaultAnchorPoint);
-        }
+        activeAnchorPoints = new List<Anchor>();
 
-        for (int i = 0; i < movingAnchorPoolSize; i++)
-        {
-            GameObject movingAnchorPoint = Instantiate(movingAnchorPrefab);
-            movingAnchorPoint.SetActive(false);
-            movingAnchorPoint.GetComponent<AnchorPoint>().ResetState();
-            movingAnchorPointPool.Enqueue(movingAnchorPoint);
-        }
+        currentSpawnDistance = spawnDistanceMin;
+        currentSpawnProbability = 0f;
     }
+
 
     private void Update()
     {
+        UpdateScreenTop();
         // Only spawn points if game is running
-        if (GameManager.Instance.IsGameRunning)
+        if (gameManager.IsGameRunning)
         {
-            // Calculate current spawn distance based on camera height
-            float t = Mathf.InverseLerp(interpolationStartHeight, interpolationEndHeight, mainCamera.transform.position.y);
-            float currentSpawnDistance = Mathf.Lerp(minSpawnDistance, maxSpawnDistance, t);
-
-            // If necessary, spawn new anchor points
-            float screenTop = mainCamera.transform.position.y + mainCamera.orthographicSize;
-            while (lastSpawnHeight < screenTop + spawnHeightOffset)
-            {
-                float spawnProbability = CalculateSpawnProbability();
-                SpawnAnchorPoint(currentSpawnDistance, spawnProbability);
-            }
+            SpawnAnchorPoints();
         }
 
         // Recycle anchors under the screen
         RecycleAnchors();
+
+        // Update spawn probability and distance based on score
+        UpdateSpawnParameters();
     }
 
-    private float CalculateSpawnProbability()
+    private void SpawnAnchorPoints()
     {
-        // Calculate spawn probability based on score
-        float spawnProbability = 1f;
-        int score = GameManager.Instance.getScore();
+        
 
-        if (score >= 500)
+        while (lastSpawnHeight < screenTop)
         {
-            float scoreMultiplier = (score - 500) * specialAnchorSpawnProbability;
-            spawnProbability += scoreMultiplier;
-        }
+            // Determine which anchor to spawn based on probability
+            float spawnRoll = Random.value;
+            Anchor newAnchorPoint;
 
-        // Clamp spawn probability to a maximum of 1
-        spawnProbability = Mathf.Clamp01(spawnProbability);
-
-        return spawnProbability;
-    }
-
-    private void SpawnAnchorPoint(float currentSpawnDistance, float spawnProbability)
-    {
-        bool isSpecialAnchor = false;
-
-        // Check Camera height for allowing SpecialAnchors
-        if (mainCamera.transform.position.y >= specialAnchorStartHeight)
-        {
-            float modifiedSpawnProbability = Mathf.Clamp01(spawnProbability * (mainCamera.transform.position.y - specialAnchorStartHeight) / (interpolationEndHeight - specialAnchorStartHeight)); // Anpassung der Spawn-Wahrscheinlichkeit basierend auf der Kamera-Höhe und Begrenzung auf den Bereich [0, 1]
-            isSpecialAnchor = Random.value <= modifiedSpawnProbability;
-        }
-
-        DebugLog("isSpecialAnchor: " + isSpecialAnchor);
-
-        GameObject anchorPoint = null;
-        AnchorPoint anchorPointComponent = null;
-
-        if (isSpecialAnchor && movingAnchorPointPool.Count > 0)
-        {
-            anchorPoint = movingAnchorPointPool.Dequeue();
-            anchorPointComponent = anchorPoint.GetComponent<AnchorPoint>();
-            if (anchorPointComponent == null)
+            if (spawnRoll <= currentSpawnProbability)
             {
-                Debug.LogError("AnchorPoint component not found on Moving Anchor prefab!");
+                newAnchorPoint = movingAnchorPointPool.GetObject();
+            }
+            else
+            {
+                newAnchorPoint = defaultAnchorPointPool.GetObject();
             }
 
-            activeMovingAnchorPoints.Add(anchorPoint);
+            activeAnchorPoints.Add(newAnchorPoint);
 
-            DebugLog("Using movingAnchorPoint from the pool");
+
+            // Place newAnchorPoint at lastSpawnHeight and random x position
+            float spawnX = Random.Range(-mainCamera.orthographicSize * mainCamera.aspect, mainCamera.orthographicSize * mainCamera.aspect);
+            Vector3 newSpawnPoint = new Vector3(spawnX, lastSpawnHeight, 0);
+            newAnchorPoint.UpdateSpawnPosition(newSpawnPoint);
+            newAnchorPoint.transform.position = newSpawnPoint;
+            newAnchorPoint.SetActive(true);
+
+            // Update last spawn height based on a random value within the spawn distance variance
+            spawnDistanceVariance = Random.Range(-spawnDistanceVariance, spawnDistanceVariance);
+            lastSpawnHeight += Mathf.Min(currentSpawnDistance + spawnDistanceVariance, spawnDistanceMax);
         }
-        else
-        {
-            anchorPoint = defaultAnchorPointPool.Dequeue();
-            anchorPointComponent = anchorPoint.GetComponent<AnchorPoint>();
-            if (anchorPointComponent == null)
-            {
-                Debug.LogError("AnchorPoint component not found on Default Anchor prefab!");
-            }
-
-            activeDefaultAnchorPoints.Add(anchorPoint);
-
-            DebugLog("Using defaultAnchorPoint from the pool");
-        }
-
-        if (anchorPoint == null || anchorPointComponent == null)
-        {
-            Debug.LogError("Failed to spawn anchorPoint or anchorPointComponent is null!");
-            return;
-        }
-
-        // Calculate spawn position
-        float spawnY = lastSpawnHeight + currentSpawnDistance;
-        float spawnX = Random.Range(mainCamera.transform.position.x - mainCamera.aspect * mainCamera.orthographicSize + 1f,
-                                     mainCamera.transform.position.x + mainCamera.aspect * mainCamera.orthographicSize - 1f);
-        Vector3 spawnPosition = new Vector3(spawnX, spawnY, 0f);
-
-        // Set anchor point position and enable it
-        anchorPoint.transform.position = spawnPosition;
-        anchorPoint.SetActive(true);
-
-        DebugLog("Spawned anchorPoint at position: " + spawnPosition);
-
-        // Update last spawn height
-        lastSpawnHeight = spawnY;
     }
 
     private void RecycleAnchors()
     {
-        // Recycle default anchor points
-        for (int i = activeDefaultAnchorPoints.Count - 1; i >= 0; i--)
-        {
-            GameObject anchorPoint = activeDefaultAnchorPoints[i];
-            if (anchorPoint.transform.position.y < mainCamera.transform.position.y - mainCamera.orthographicSize + DespawnThreshold
-                && !IsPointVisibleOnScreen(anchorPoint.transform.position))
-            {
-                RecycleAnchorPoint(anchorPoint, i);
-            }
-        }
+        float screenBottom = mainCamera.transform.position.y - mainCamera.orthographicSize + despawnTolerance;
 
-        // Recycle moving anchor points
-        for (int i = activeMovingAnchorPoints.Count - 1; i >= 0; i--)
+        for (int i = activeAnchorPoints.Count - 1; i >= 0; i--)
         {
-            GameObject anchorPoint = activeMovingAnchorPoints[i];
-            if (anchorPoint.transform.position.y < mainCamera.transform.position.y - mainCamera.orthographicSize + DespawnThreshold
-                && !IsPointVisibleOnScreen(anchorPoint.transform.position))
+            if (activeAnchorPoints[i].transform.position.y < screenBottom)
             {
-                DebugLog("Trying to Recycle Moving Anchor...");
-                RecycleAnchorPoint(anchorPoint, i);
+                activeAnchorPoints[i].SetActive(false);
+                // Depending on its type, return it to the correct pool
+                if (activeAnchorPoints[i].GetType() == typeof(DefaultAnchor))
+                {
+                    defaultAnchorPointPool.ReturnObject(activeAnchorPoints[i]);
+                    activeAnchorPoints.RemoveAt(i);
+                }
+                else if (activeAnchorPoints[i].GetType() == typeof(MovingAnchor))
+                {
+                    movingAnchorPointPool.ReturnObject(activeAnchorPoints[i]);
+                    activeAnchorPoints.RemoveAt(i);
+                }
+                else
+                {
+                    DebugLog("RecycleAnchors failed at Count " + activeAnchorPoints.Count); 
+                }
             }
         }
     }
 
-    private bool IsPointVisibleOnScreen(Vector3 point)
+    private void UpdateSpawnParameters()
     {
-        Vector3 screenPoint = mainCamera.WorldToViewportPoint(point);
-        return screenPoint.x >= 0 && screenPoint.x <= 1 && screenPoint.y >= 0 && screenPoint.y <= 1;
+        int currentScore = gameManager.GetScore();
+        float interpolationPosition = gameManager.GetInterpolationPosition();
+
+        // Check if the current score is greater than spawnProbabilityIncreaseScore
+        if (currentScore > spawnProbabilityIncreaseScore)
+        {
+            // Calculate new spawn probability
+            float spawnProbabilityRatio = (currentScore - spawnProbabilityIncreaseScore) / (float)spawnProbabilityIncreaseScore;
+            currentSpawnProbability = Mathf.Lerp(movingAnchorInitialSpawnProbability, movingAnchorMaxSpawnProbability, spawnProbabilityRatio);
+        }
+
+        // Calculate the new spawn distance
+        float spawnDistanceRatio = currentScore / (float)interpolationPosition; // Normalize the ratio to [0,1]
+        spawnDistanceRatio = Mathf.Clamp(spawnDistanceRatio, 0, 1); // Ensure the ratio is within the range [0,1]
+        currentSpawnDistance = Mathf.Lerp(spawnDistanceMin, spawnDistanceMax, spawnDistanceRatio);
     }
 
-    private void RecycleAnchorPoint(GameObject anchorPoint, int index)
+    private void UpdateScreenTop()
     {
-        // Disable the anchor point and put it back into the appropriate pool
-        anchorPoint.SetActive(false);
-
-        if (activeMovingAnchorPoints.Contains(anchorPoint))
-        {
-            activeMovingAnchorPoints.RemoveAt(index);
-            movingAnchorPointPool.Enqueue(anchorPoint);
-        }
-        else if (activeDefaultAnchorPoints.Contains(anchorPoint))
-        {
-            activeDefaultAnchorPoints.RemoveAt(index);
-            defaultAnchorPointPool.Enqueue(anchorPoint);
-        }
+        screenTop = mainCamera.transform.position.y + mainCamera.orthographicSize + spawnTolerance;
     }
 
     private void DebugLog(string message)
     {
         if (debugEnabled)
         {
-            Debug.Log(message);
+            Debug.Log("AnchorPointGenerator: " + message);
         }
     }
 }

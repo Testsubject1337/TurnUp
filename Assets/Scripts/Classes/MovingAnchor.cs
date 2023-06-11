@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class MovingAnchor : AnchorPoint
+public class MovingAnchor : Anchor
 {
     [SerializeField] private float speed = 1.0f;
     [SerializeField] private Vector2 direction = Vector2.right;
@@ -10,21 +10,25 @@ public class MovingAnchor : AnchorPoint
     private Vector2 startPosition;
     private Vector2 endPosition;
 
+    MovingAnchor()
+    {
+        anchorType = AnchorPointType.Moving;
+
+        debugEnabled = true;
+    }
+
     private void Awake()
     {
         lineRenderer = GetComponent<LineRenderer>();
-        anchorPointType = AnchorPointType.Special;
     }
 
-    private void Start()
-    {
-        ResetState();
-    }
 
     public override void ResetState()
     {
-        startPosition = (Vector2)transform.position - (direction.normalized * range / 2);
-        endPosition = (Vector2)transform.position + (direction.normalized * range / 2);
+        DebugLog("Reset State called. ");
+
+        startPosition = (Vector2)spawnPoint - (direction.normalized * range / 2);
+        endPosition = (Vector2)spawnPoint + (direction.normalized * range / 2);
 
         // Check if lineRenderer is not null before trying to access it
         if (lineRenderer != null)
@@ -35,20 +39,25 @@ public class MovingAnchor : AnchorPoint
         }
         else
         {
-            Debug.LogError("LineRenderer component is missing on MovingAnchor GameObject.");
+            DebugLog("LineRenderer component is missing on MovingAnchor GameObject.", true);
         }
     }
 
 
     private void Update()
     {
-        // Update position based on direction, speed and time
-        transform.position = startPosition + (direction.normalized * Mathf.PingPong(Time.time * speed, range));
+        if (isActive)
+        {
+            // Update position based on direction, speed and time
+            transform.position = startPosition + (direction.normalized * Mathf.PingPong(Time.time * speed, range));
+        }
 
-        // Keep the object within the screen bounds
-        var viewportPos = Camera.main.WorldToViewportPoint(transform.position);
-        viewportPos.x = Mathf.Clamp(viewportPos.x, 0.0f, 1.0f);
+
+
+        //// Keep the object within the screen bounds
+        //var viewportPos = Camera.main.WorldToViewportPoint(transform.position);
+        //viewportPos.x = Mathf.Clamp(viewportPos.x, 0.0f, 1.0f);
         //viewportPos.y = Mathf.Clamp(viewportPos.y, 0.0f, 1.0f);
-        transform.position = Camera.main.ViewportToWorldPoint(viewportPos);
+        //transform.position = Camera.main.ViewportToWorldPoint(viewportPos);
     }
 }

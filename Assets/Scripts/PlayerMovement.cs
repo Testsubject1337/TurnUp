@@ -7,7 +7,7 @@ public class PlayerMovement : MonoBehaviour
 
     private GameManager gameManager;
     private bool isHanging = false;
-    private AnchorPoint currentAnchorPoint;
+    private Anchor currentAnchorPoint;
     private Rigidbody2D rb;
     private LineRenderer lineRenderer;
     private Renderer renderer;
@@ -44,7 +44,7 @@ public class PlayerMovement : MonoBehaviour
             RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero, Mathf.Infinity, anchorPointLayer);
             if (hit.collider != null)
             {
-                SetAnchor(hit.collider.GetComponent<AnchorPoint>());
+                SetAnchor(hit.collider.GetComponent<Anchor>());
             }
         }
         else if (Input.GetMouseButtonUp(0))
@@ -69,7 +69,7 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    private void SetAnchor(AnchorPoint anchorPoint)
+    private void SetAnchor(Anchor anchorPoint)
     {
         currentAnchorPoint = anchorPoint;
         isHanging = true;
