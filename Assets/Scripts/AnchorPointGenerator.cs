@@ -88,7 +88,7 @@ public class AnchorPointGenerator : MonoBehaviour
 
 
             // Place newAnchorPoint at lastSpawnHeight and random x position
-            float spawnX = Random.Range(-mainCamera.orthographicSize * mainCamera.aspect, mainCamera.orthographicSize * mainCamera.aspect);
+            float spawnX = Random.Range(-mainCamera.orthographicSize * mainCamera.aspect + (newAnchorPoint.getWidth().x / 2) + 0.5f, mainCamera.orthographicSize * mainCamera.aspect - (newAnchorPoint.getWidth().x / 2) - 0.5f);
             Vector3 newSpawnPoint = new Vector3(spawnX, lastSpawnHeight, 0);
             newAnchorPoint.UpdateSpawnPosition(newSpawnPoint);
             newAnchorPoint.transform.position = newSpawnPoint;

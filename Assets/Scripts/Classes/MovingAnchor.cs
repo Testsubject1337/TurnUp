@@ -2,19 +2,22 @@ using UnityEngine;
 
 public class MovingAnchor : Anchor
 {
-    [SerializeField] private float speed = 1.0f;
-    [SerializeField] private Vector2 direction = Vector2.right;
-    [SerializeField] private float range = 3.0f;
+
+    public bool isRandomized = false;
 
     private LineRenderer lineRenderer;
+    private float speed = 1.2f;
+    private float range = 3.2f;
+    private Vector2 direction = Vector2.right;
     private Vector2 startPosition;
     private Vector2 endPosition;
+    
 
     MovingAnchor()
     {
         anchorType = AnchorPointType.Moving;
-
         debugEnabled = true;
+        width = new Vector2(4.2f, 4.2f);
     }
 
     private void Awake()
@@ -48,6 +51,8 @@ public class MovingAnchor : Anchor
     {
         if (isActive)
         {
+
+
             // Update position based on direction, speed and time
             transform.position = startPosition + (direction.normalized * Mathf.PingPong(Time.time * speed, range));
         }
