@@ -77,8 +77,8 @@ public class GameManager : MonoBehaviour
 
     private void UpdateScoreUI()
     {
-        scoreText.text = "Score: " + currentScore.ToString();
-        highscoreText.text = "Highscore: " + highscore.ToString();
+        scoreText.text = currentScore.ToString();
+        highscoreText.text = highscore.ToString();
     }
 
     public void StartGame()

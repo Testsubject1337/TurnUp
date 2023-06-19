@@ -127,7 +127,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.2, y: 1.2}
+  m_Size: {x: 1.5, y: 1.5}
   m_EdgeRadius: 0
 --- !u!50 &6343924897155751143
 Rigidbody2D:
@@ -162,5 +162,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbb8e99287c596347bcc971746c4dd73, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ropeReleaseRadius: 1
-  ropeForce: 50

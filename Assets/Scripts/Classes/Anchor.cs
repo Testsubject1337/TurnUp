@@ -14,6 +14,7 @@ public abstract class Anchor : MonoBehaviour
     // Technical Temps
     protected Vector3 spawnPoint;
     protected bool isActive = false;
+    protected Vector2 width = new Vector2(1, 1);
 
     // Debug
     protected bool debugEnabled = false;
@@ -59,6 +60,11 @@ public abstract class Anchor : MonoBehaviour
     public float GetRopeForce()
     {
         return ropeForce;
+    }
+
+    public Vector2 getWidth()
+    {
+        return width;
     }
 
     public void SetActive(bool isActive)
