@@ -1,3 +1,5 @@
+// This Class spawnss the Background-Color-Tiles and handles them within a ObjectPool
+
 using UnityEngine;
 using System.Collections;
 

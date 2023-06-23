@@ -1,3 +1,5 @@
+// A simple Object-Pooling-Mechanism for optimizing.
+
 using System.Collections.Generic;
 using UnityEngine;
 

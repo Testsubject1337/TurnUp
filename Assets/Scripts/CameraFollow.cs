@@ -1,3 +1,5 @@
+// This Class manages the Cameras Movement for following the Player. It is adapting to the current Score.
+
 using UnityEngine;
 
 public class CameraFollow : MonoBehaviour
