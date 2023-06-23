@@ -4,7 +4,6 @@ public class MovingAnchor : Anchor
 {
 
     public bool isRandomized = false;
-
     private LineRenderer lineRenderer;
     private float speed = 1.2f;
     private float range = 3.2f;
@@ -12,7 +11,6 @@ public class MovingAnchor : Anchor
     private Vector2 startPosition;
     private Vector2 endPosition;
     
-
     MovingAnchor()
     {
         anchorType = AnchorPointType.Moving;
@@ -24,7 +22,6 @@ public class MovingAnchor : Anchor
     {
         lineRenderer = GetComponent<LineRenderer>();
     }
-
 
     public override void ResetState()
     {
@@ -51,18 +48,8 @@ public class MovingAnchor : Anchor
     {
         if (isActive)
         {
-
-
             // Update position based on direction, speed and time
             transform.position = startPosition + (direction.normalized * Mathf.PingPong(Time.time * speed, range));
         }
-
-
-
-        //// Keep the object within the screen bounds
-        //var viewportPos = Camera.main.WorldToViewportPoint(transform.position);
-        //viewportPos.x = Mathf.Clamp(viewportPos.x, 0.0f, 1.0f);
-        //viewportPos.y = Mathf.Clamp(viewportPos.y, 0.0f, 1.0f);
-        //transform.position = Camera.main.ViewportToWorldPoint(viewportPos);
     }
 }

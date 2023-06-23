@@ -1,3 +1,5 @@
+// Players Movement. Highly depending on the AnchorPoints.
+
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -124,9 +126,6 @@ public class PlayerMovement : MonoBehaviour
 
             rb.AddTorque(torque);
         }
-
-
-
 
         // Calculate the top threshold based on the visible area of the camera
         float topThresholdY = Camera.main.ViewportToWorldPoint(new Vector3(0.5f, 1f - topPercentageThreshold, 0)).y;

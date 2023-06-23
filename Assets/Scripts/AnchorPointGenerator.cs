@@ -1,3 +1,5 @@
+// The AnchorPointGenerator generates AnchorPoints and manages them via a Pooling system.
+
 using System.Collections.Generic;
 using UnityEngine;
 
